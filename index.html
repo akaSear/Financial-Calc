@@ -8,75 +8,98 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      color: #333;
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
     }
-    .form-container, .chart-container {
+
+    .form-container {
       max-width: 600px;
-      margin: auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
     }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .form-container label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+
     .form-container input {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
+      margin-bottom: 15px;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      border-radius: 5px;
     }
-    .form-container button {
-      width: 100%;
-      padding: 10px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .form-container button:hover {
-      background: #0056b3;
-    }
+
     .dynamic-entry {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .dynamic-entry div {
       margin-bottom: 10px;
     }
-    .dynamic-entry input {
-      flex: 1;
+
+    .dynamic-entry label {
+      font-weight: bold;
     }
+
+    .dynamic-entry input {
+      width: 70%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .form-container button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: #FFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .form-container button:hover {
+      background-color: #0056b3;
+    }
+
+    .chart-container {
+      margin-top: 40px;
+      text-align: center;
+    }
+
     canvas {
       max-width: 100%;
     }
   </style>
 </head>
 <body>
-
   <div class="form-container">
     <h1>Financial Data Visualizer</h1>
+    
     <label for="income">Monthly Income ($)</label>
     <input type="number" id="income" placeholder="Enter your income">
-
+    
     <label for="bills">Monthly Bills ($)</label>
     <input type="number" id="bills" placeholder="Enter your bills">
 
-    <h2>Necessities</h2>
-    <div id="necessities-container">
-      <!-- Necessities entries will be added here -->
-    </div>
-    <button type="button" onclick="addNecessityEntry()">Add Necessity</button>
-
+    <!-- Debts Section -->
     <h2>Debts</h2>
-    <div id="debt-container">
-      <!-- Debt entries will be added here -->
-    </div>
+    <div id="debt-container"></div>
     <button type="button" onclick="addDebtEntry()">Add Debt</button>
-
-    <button onclick="generateChart()">Generate Graph</button>
+    
+    <!-- Necessities Section -->
+    <h2>Necessities</h2>
+    <div id="necessities-container"></div>
+    <button type="button" onclick="addNecessityEntry()">Add Necessity</button>
+    
+    <!-- Chart Section -->
+    <button type="button" onclick="generateChart()">Generate Chart</button>
   </div>
 
   <div class="chart-container">
@@ -84,126 +107,109 @@
   </div>
 
   <script>
-    const necessityColors = [
-      '#FF5733', '#FFC300', '#28A745', '#17A2B8', '#6610F2',
-      '#6C757D', '#E83E8C', '#20C997', '#FD7E14', '#007BFF'
-    ];
-    let currentNecessityColorIndex = 0;
-
-    function getNextNecessityColor() {
-      const color = necessityColors[currentNecessityColorIndex];
-      currentNecessityColorIndex = (currentNecessityColorIndex + 1) % necessityColors.length;
-      return color;
-    }
-
-    function addNecessityEntry() {
-      const necessitiesContainer = document.getElementById('necessities-container');
-      
-      const necessityEntry = document.createElement('div');
-      necessityEntry.className = 'dynamic-entry';
-
-      const labelInput = document.createElement('input');
-      labelInput.type = 'text';
-      labelInput.placeholder = 'Necessity Label';
-      labelInput.className = 'necessity-label';
-
-      const necessityInput = document.createElement('input');
-      necessityInput.type = 'number';
-      necessityInput.placeholder = 'Necessity Amount ($)';
-      necessityInput.className = 'necessity-amount';
-
-      const removeButton = document.createElement('button');
-      removeButton.textContent = 'Remove';
-      removeButton.type = 'button';
-      removeButton.onclick = () => necessityEntry.remove();
-
-      necessityEntry.appendChild(labelInput);
-      necessityEntry.appendChild(necessityInput);
-      necessityEntry.appendChild(removeButton);
-
-      necessitiesContainer.appendChild(necessityEntry);
-    }
-
+    // Add a new dynamic debt entry
     function addDebtEntry() {
       const debtContainer = document.getElementById('debt-container');
-      
+
       const debtEntry = document.createElement('div');
       debtEntry.className = 'dynamic-entry';
 
+      const debtWrapper = document.createElement('div');
+      const debtLabel = document.createElement('label');
+      debtLabel.textContent = 'Debt Amount ($):';
       const debtInput = document.createElement('input');
       debtInput.type = 'number';
-      debtInput.placeholder = 'Debt Amount ($)';
+      debtInput.placeholder = 'Enter debt amount';
       debtInput.className = 'debt-amount';
+      debtWrapper.appendChild(debtLabel);
+      debtWrapper.appendChild(debtInput);
 
+      const aprWrapper = document.createElement('div');
+      const aprLabel = document.createElement('label');
+      aprLabel.textContent = 'APR (%):';
       const aprInput = document.createElement('input');
       aprInput.type = 'number';
-      aprInput.placeholder = 'APR (%)';
+      aprInput.placeholder = 'Enter APR';
       aprInput.className = 'debt-apr';
+      aprWrapper.appendChild(aprLabel);
+      aprWrapper.appendChild(aprInput);
 
       const removeButton = document.createElement('button');
       removeButton.textContent = 'Remove';
       removeButton.type = 'button';
       removeButton.onclick = () => debtEntry.remove();
 
-      debtEntry.appendChild(debtInput);
-      debtEntry.appendChild(aprInput);
+      debtEntry.appendChild(debtWrapper);
+      debtEntry.appendChild(aprWrapper);
       debtEntry.appendChild(removeButton);
 
       debtContainer.appendChild(debtEntry);
     }
 
+    // Add a new dynamic necessity entry
+    function addNecessityEntry() {
+      const necessitiesContainer = document.getElementById('necessities-container');
+
+      const necessityEntry = document.createElement('div');
+      necessityEntry.className = 'dynamic-entry';
+
+      const labelWrapper = document.createElement('div');
+      const labelLabel = document.createElement('label');
+      labelLabel.textContent = 'Necessity Label:';
+      const labelInput = document.createElement('input');
+      labelInput.type = 'text';
+      labelInput.placeholder = 'Enter necessity name';
+      labelInput.className = 'necessity-label';
+      labelWrapper.appendChild(labelLabel);
+      labelWrapper.appendChild(labelInput);
+
+      const amountWrapper = document.createElement('div');
+      const amountLabel = document.createElement('label');
+      amountLabel.textContent = 'Necessity Amount ($):';
+      const necessityInput = document.createElement('input');
+      necessityInput.type = 'number';
+      necessityInput.placeholder = 'Enter amount';
+      necessityInput.className = 'necessity-amount';
+      amountWrapper.appendChild(amountLabel);
+      amountWrapper.appendChild(necessityInput);
+
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Remove';
+      removeButton.type = 'button';
+      removeButton.onclick = () => necessityEntry.remove();
+
+      necessityEntry.appendChild(labelWrapper);
+      necessityEntry.appendChild(amountWrapper);
+      necessityEntry.appendChild(removeButton);
+
+      necessitiesContainer.appendChild(necessityEntry);
+    }
+
+    // Generate the chart
     function generateChart() {
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
 
-      const necessityEntries = document.querySelectorAll('.dynamic-entry');
-      const debtEntries = document.querySelectorAll('.debt-entry');
+      const debts = [...document.querySelectorAll('.debt-amount')].map(input => parseFloat(input.value) || 0);
+      const necessities = [...document.querySelectorAll('.necessity-amount')].map(input => parseFloat(input.value) || 0);
 
-      let totalDebtPayments = 0;
-      const necessityData = [];
+      const debtTotal = debts.reduce((sum, val) => sum + val, 0);
+      const necessityTotal = necessities.reduce((sum, val) => sum + val, 0);
 
-      necessityEntries.forEach((entry) => {
-        const label = entry.querySelector('.necessity-label').value || 'Unnamed Necessity';
-        const amount = parseFloat(entry.querySelector('.necessity-amount').value) || 0;
-        necessityData.push({ label, amount, color: getNextNecessityColor() });
-      });
-
-      debtEntries.forEach((entry) => {
-        const debtAmount = parseFloat(entry.querySelector('.debt-amount').value) || 0;
-        const apr = parseFloat(entry.querySelector('.debt-apr').value) || 0;
-        const monthlyInterest = (debtAmount * (apr / 100)) / 12;
-        totalDebtPayments += monthlyInterest;
-      });
-
-      const totalNecessities = necessityData.reduce((sum, item) => sum + item.amount, 0);
-      const totalExpenses = bills + totalNecessities + totalDebtPayments;
-      const remainingIncome = income - totalExpenses;
-
-      const labels = ['Bills', 'Debt Payments', 'Remaining Income', ...necessityData.map((item) => item.label)];
-      const data = [bills, totalDebtPayments, remainingIncome, ...necessityData.map((item) => item.amount)];
-      const backgroundColors = ['#007BFF', '#FF5733', '#28A745', ...necessityData.map((item) => item.color)];
+      const other = income - (bills + debtTotal + necessityTotal);
 
       const ctx = document.getElementById('financialChart').getContext('2d');
       new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: labels,
+          labels: ['Bills', 'Debts', 'Necessities', 'Other'],
           datasets: [{
-            data: data,
-            backgroundColor: backgroundColors
+            data: [bills, debtTotal, necessityTotal, other > 0 ? other : 0],
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
           }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top'
-            }
-          }
         }
       });
     }
   </script>
-
 </body>
 </html>
