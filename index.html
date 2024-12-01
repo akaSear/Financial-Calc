@@ -126,6 +126,9 @@
   </div>
 
   <script>
+    // Global variable to hold the chart instance
+    let myChart;
+
     // Add a new dynamic debt entry
     function addDebtEntry() {
       const debtContainer = document.getElementById('debt-container');
@@ -193,8 +196,7 @@
       const labelLabel = document.createElement('label');
       labelLabel.textContent = 'Necessity Label:';
       const labelInput = document.createElement('input');
-      labelInput.type = 'text';
-      labelInput.placeholder = 'Enter necessity name';
+      labelInput.placeholder = 'Enter necessity label';
       labelInput.className = 'necessity-label';
       labelWrapper.appendChild(labelLabel);
       labelWrapper.appendChild(labelInput);
@@ -202,61 +204,40 @@
       const amountWrapper = document.createElement('div');
       const amountLabel = document.createElement('label');
       amountLabel.textContent = 'Necessity Amount ($):';
-      const necessityInput = document.createElement('input');
-      necessityInput.type = 'number';
-      necessityInput.placeholder = 'Enter amount';
-      necessityInput.className = 'necessity-amount';
+      const amountInput = document.createElement('input');
+      amountInput.type = 'number';
+      amountInput.placeholder = 'Enter necessity amount';
+      amountInput.className = 'necessity-amount';
       amountWrapper.appendChild(amountLabel);
-      amountWrapper.appendChild(necessityInput);
+      amountWrapper.appendChild(amountInput);
 
+      const colorWrapper = document.createElement('div');
+      const colorLabel = document.createElement('label');
+      colorLabel.textContent = 'Color:';
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = '#FFCE56'; // Default color
+      colorInput.className = 'necessity-color';
+      colorWrapper.appendChild(colorLabel);
+      colorWrapper.appendChild(colorInput);
+
+      // Remove Button
       const removeButton = document.createElement('button');
       removeButton.textContent = 'Remove';
       removeButton.type = 'button';
       removeButton.onclick = () => necessityEntry.remove();
 
+      // Append everything to the necessity entry
       necessityEntry.appendChild(labelWrapper);
       necessityEntry.appendChild(amountWrapper);
+      necessityEntry.appendChild(colorWrapper);
       necessityEntry.appendChild(removeButton);
 
+      // Append the necessity entry to the necessities container
       necessitiesContainer.appendChild(necessityEntry);
     }
 
-    // Calculate the time and interest for debts
-    function calculateDebtDetails() {
-      const debts = [...document.querySelectorAll('.debt-amount')].map((input, idx) => {
-        const amount = parseFloat(input.value) || 0;
-        const apr = parseFloat(document.querySelectorAll('.debt-apr')[idx].value) || 0;
-        const minPayment = parseFloat(document.querySelectorAll('.debt-min-payment')[idx].value) || 0;
-        return { amount, apr, minPayment };
-      });
-
-      let totalInterest = 0;
-      let totalDebt = 0;
-      let totalPayments = 0;
-      let totalMonths = 0;
-
-      debts.forEach(debt => {
-        totalDebt += debt.amount;
-        totalPayments += debt.minPayment;
-        let remainingDebt = debt.amount;
-        let months = 0;
-
-        // Estimate interest and time to pay off if only minimum payments are made
-        while (remainingDebt > 0) {
-          let interest = remainingDebt * (debt.apr / 100 / 12); // Monthly interest
-          totalInterest += interest;
-          remainingDebt += interest - debt.minPayment;
-          if (remainingDebt > 0) {
-            months++;
-          }
-        }
-        totalMonths = Math.max(totalMonths, months);
-      });
-
-      return { totalDebt, totalPayments, totalInterest, totalMonths };
-    }
-
-    // Generate the chart and display details
+    // Generate the chart with updated values
     function generateChart() {
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
@@ -270,9 +251,14 @@
       const totalDebtDetails = calculateDebtDetails();
       const other = income - (bills + debtTotal + necessityTotal);
 
+      // If the chart exists, destroy it to clear the old chart before rendering the new one
+      if (myChart) {
+        myChart.destroy();
+      }
+
       // Pie chart data
       const ctx = document.getElementById('financialChart').getContext('2d');
-      new Chart(ctx, {
+      myChart = new Chart(ctx, {
         type: 'pie',
         data: {
           labels: ['Bills', 'Debts', 'Necessities', 'Other'],
@@ -291,6 +277,43 @@
         <p>Total Interest (if only minimum payments are made): $${totalDebtDetails.totalInterest.toFixed(2)}</p>
         <p>Estimated Time to Pay Off: ${totalDebtDetails.totalMonths} months</p>
       `;
+    }
+
+    // Calculate total debt details (e.g., total payments, interest, months to pay off)
+    function calculateDebtDetails() {
+      const debts = [...document.querySelectorAll('.debt-amount')];
+      const aprs = [...document.querySelectorAll('.debt-apr')];
+      const minPayments = [...document.querySelectorAll('.debt-min-payment')];
+      
+      let totalDebt = 0;
+      let totalPayments = 0;
+      let totalInterest = 0;
+      let totalMonths = 0;
+
+      debts.forEach((debtInput, i) => {
+        const debtAmount = parseFloat(debtInput.value) || 0;
+        const apr = parseFloat(aprs[i].value) || 0;
+        const minPayment = parseFloat(minPayments[i].value) || 0;
+        
+        // Assume minimum payments are applied
+        totalDebt += debtAmount;
+        totalPayments += minPayment;
+        
+        // Calculate the interest accrued over 1 year (simplified)
+        const interest = (debtAmount * apr) / 100;
+        totalInterest += interest;
+
+        // Calculate time to pay off (simplified)
+        const months = debtAmount / minPayment;
+        totalMonths += months;
+      });
+
+      return {
+        totalDebt,
+        totalPayments,
+        totalInterest,
+        totalMonths
+      };
     }
   </script>
 </body>
