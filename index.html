@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Data Visualizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .form-container, .chart-container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-container input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .form-container button {
+      width: 100%;
+      padding: 10px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background: #0056b3;
+    }
+    canvas {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h1>Financial Data Visualizer</h1>
+    <label for="income">Monthly Income ($)</label>
+    <input type="number" id="income" placeholder="Enter your income">
+
+    <label for="bills">Monthly Bills ($)</label>
+    <input type="number" id="bills" placeholder="Enter your bills">
+
+    <label for="debt">Total Debt ($)</label>
+    <input type="number" id="debt" placeholder="Enter your debt">
+
+    <label for="payments">Minimum Monthly Payments ($)</label>
+    <input type="number" id="payments" placeholder="Enter minimum payments">
+
+    <label for="apr">Debt APR (%)</label>
+    <input type="number" id="apr" placeholder="Enter APR">
+
+    <label for="necessities">Other Necessities ($)</label>
+    <input type="number" id="necessities" placeholder="Enter other necessities">
+
+    <button onclick="generateChart()">Generate Graph</button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="financialChart"></canvas>
+  </div>
+
+  <script>
+    function generateChart() {
+      // Get input values
+      const income = parseFloat(document.getElementById('income').value) || 0;
+      const bills = parseFloat(document.getElementById('bills').value) || 0;
+      const debt = parseFloat(document.getElementById('debt').value) || 0;
+      const payments = parseFloat(document.getElementById('payments').value) || 0;
+      const apr = parseFloat(document.getElementById('apr').value) || 0;
+      const necessities = parseFloat(document.getElementById('necessities').value) || 0;
+
+      // Calculate percentages
+      const totalExpenses = bills + payments + necessities;
+      const remainingIncome = income - totalExpenses;
+      const debtInterest = (debt * (apr / 100)) / 12; // Monthly interest
+      const categories = [
+        { label: 'Bills', value: bills },
+        { label: 'Debt Payments', value: payments + debtInterest },
+        { label: 'Necessities', value: necessities },
+        { label: 'Remaining Income', value: remainingIncome },
+      ];
+
+      // Prepare data for the chart
+      const labels = categories.map(cat => cat.label);
+      const data = categories.map(cat => cat.value);
+
+      // Generate chart
+      const ctx = document.getElementById('financialChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#007BFF', '#FF5733', '#FFC300', '#28A745']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
