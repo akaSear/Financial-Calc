@@ -44,6 +44,7 @@
       display: flex;
       justify-content: space-between;
       gap: 10px;
+      margin-bottom: 10px;
     }
     .dynamic-entry input {
       flex: 1;
@@ -101,6 +102,11 @@
       const necessityEntry = document.createElement('div');
       necessityEntry.className = 'dynamic-entry';
 
+      const labelInput = document.createElement('input');
+      labelInput.type = 'text';
+      labelInput.placeholder = 'Necessity Label';
+      labelInput.className = 'necessity-label';
+
       const necessityInput = document.createElement('input');
       necessityInput.type = 'number';
       necessityInput.placeholder = 'Necessity Amount ($)';
@@ -111,6 +117,7 @@
       removeButton.type = 'button';
       removeButton.onclick = () => necessityEntry.remove();
 
+      necessityEntry.appendChild(labelInput);
       necessityEntry.appendChild(necessityInput);
       necessityEntry.appendChild(removeButton);
 
@@ -149,17 +156,16 @@
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
 
-      const necessityEntries = document.querySelectorAll('.necessity-amount');
+      const necessityEntries = document.querySelectorAll('.dynamic-entry');
       const debtEntries = document.querySelectorAll('.debt-entry');
 
-      let totalNecessities = 0;
       let totalDebtPayments = 0;
       const necessityData = [];
 
       necessityEntries.forEach((entry) => {
-        const amount = parseFloat(entry.value) || 0;
-        totalNecessities += amount;
-        necessityData.push({ amount, color: getNextNecessityColor() });
+        const label = entry.querySelector('.necessity-label').value || 'Unnamed Necessity';
+        const amount = parseFloat(entry.querySelector('.necessity-amount').value) || 0;
+        necessityData.push({ label, amount, color: getNextNecessityColor() });
       });
 
       debtEntries.forEach((entry) => {
@@ -169,10 +175,11 @@
         totalDebtPayments += monthlyInterest;
       });
 
+      const totalNecessities = necessityData.reduce((sum, item) => sum + item.amount, 0);
       const totalExpenses = bills + totalNecessities + totalDebtPayments;
       const remainingIncome = income - totalExpenses;
 
-      const labels = ['Bills', 'Debt Payments', 'Remaining Income', ...necessityData.map((_, i) => `Necessity ${i + 1}`)];
+      const labels = ['Bills', 'Debt Payments', 'Remaining Income', ...necessityData.map((item) => item.label)];
       const data = [bills, totalDebtPayments, remainingIncome, ...necessityData.map((item) => item.amount)];
       const backgroundColors = ['#007BFF', '#FF5733', '#28A745', ...necessityData.map((item) => item.color)];
 
