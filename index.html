@@ -40,12 +40,12 @@
     .form-container button:hover {
       background: #0056b3;
     }
-    .debt-entry {
+    .dynamic-entry {
       display: flex;
       justify-content: space-between;
       gap: 10px;
     }
-    .debt-entry input {
+    .dynamic-entry input {
       flex: 1;
     }
     canvas {
@@ -63,8 +63,11 @@
     <label for="bills">Monthly Bills ($)</label>
     <input type="number" id="bills" placeholder="Enter your bills">
 
-    <label for="necessities">Other Necessities ($)</label>
-    <input type="number" id="necessities" placeholder="Enter other necessities">
+    <h2>Necessities</h2>
+    <div id="necessities-container">
+      <!-- Necessities entries will be added here -->
+    </div>
+    <button type="button" onclick="addNecessityEntry()">Add Necessity</button>
 
     <h2>Debts</h2>
     <div id="debt-container">
@@ -80,72 +83,99 @@
   </div>
 
   <script>
+    const necessityColors = [
+      '#FF5733', '#FFC300', '#28A745', '#17A2B8', '#6610F2',
+      '#6C757D', '#E83E8C', '#20C997', '#FD7E14', '#007BFF'
+    ];
+    let currentNecessityColorIndex = 0;
+
+    function getNextNecessityColor() {
+      const color = necessityColors[currentNecessityColorIndex];
+      currentNecessityColorIndex = (currentNecessityColorIndex + 1) % necessityColors.length;
+      return color;
+    }
+
+    function addNecessityEntry() {
+      const necessitiesContainer = document.getElementById('necessities-container');
+      
+      const necessityEntry = document.createElement('div');
+      necessityEntry.className = 'dynamic-entry';
+
+      const necessityInput = document.createElement('input');
+      necessityInput.type = 'number';
+      necessityInput.placeholder = 'Necessity Amount ($)';
+      necessityInput.className = 'necessity-amount';
+
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Remove';
+      removeButton.type = 'button';
+      removeButton.onclick = () => necessityEntry.remove();
+
+      necessityEntry.appendChild(necessityInput);
+      necessityEntry.appendChild(removeButton);
+
+      necessitiesContainer.appendChild(necessityEntry);
+    }
+
     function addDebtEntry() {
       const debtContainer = document.getElementById('debt-container');
       
-      // Create a new debt entry
       const debtEntry = document.createElement('div');
-      debtEntry.className = 'debt-entry';
+      debtEntry.className = 'dynamic-entry';
 
-      // Input for debt amount
       const debtInput = document.createElement('input');
       debtInput.type = 'number';
       debtInput.placeholder = 'Debt Amount ($)';
       debtInput.className = 'debt-amount';
 
-      // Input for debt APR
       const aprInput = document.createElement('input');
       aprInput.type = 'number';
       aprInput.placeholder = 'APR (%)';
       aprInput.className = 'debt-apr';
 
-      // Remove button
       const removeButton = document.createElement('button');
       removeButton.textContent = 'Remove';
       removeButton.type = 'button';
       removeButton.onclick = () => debtEntry.remove();
 
-      // Add inputs and button to the entry
       debtEntry.appendChild(debtInput);
       debtEntry.appendChild(aprInput);
       debtEntry.appendChild(removeButton);
 
-      // Add entry to the container
       debtContainer.appendChild(debtEntry);
     }
 
     function generateChart() {
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
-      const necessities = parseFloat(document.getElementById('necessities').value) || 0;
 
-      // Collect debt data
+      const necessityEntries = document.querySelectorAll('.necessity-amount');
       const debtEntries = document.querySelectorAll('.debt-entry');
-      let totalDebtPayments = 0;
 
-      debtEntries.forEach(entry => {
+      let totalNecessities = 0;
+      let totalDebtPayments = 0;
+      const necessityData = [];
+
+      necessityEntries.forEach((entry) => {
+        const amount = parseFloat(entry.value) || 0;
+        totalNecessities += amount;
+        necessityData.push({ amount, color: getNextNecessityColor() });
+      });
+
+      debtEntries.forEach((entry) => {
         const debtAmount = parseFloat(entry.querySelector('.debt-amount').value) || 0;
         const apr = parseFloat(entry.querySelector('.debt-apr').value) || 0;
         const monthlyInterest = (debtAmount * (apr / 100)) / 12;
         totalDebtPayments += monthlyInterest;
       });
 
-      // Calculate remaining income
-      const totalExpenses = bills + necessities + totalDebtPayments;
+      const totalExpenses = bills + totalNecessities + totalDebtPayments;
       const remainingIncome = income - totalExpenses;
 
-      // Prepare chart data
-      const categories = [
-        { label: 'Bills', value: bills },
-        { label: 'Necessities', value: necessities },
-        { label: 'Debt Payments', value: totalDebtPayments },
-        { label: 'Remaining Income', value: remainingIncome }
-      ];
+      const labels = ['Bills', 'Debt Payments', 'Remaining Income', ...necessityData.map((_, i) => `Necessity ${i + 1}`)];
+      const data = [bills, totalDebtPayments, remainingIncome, ...necessityData.map((item) => item.amount)];
+      const backgroundColors = ['#007BFF', '#FF5733', '#28A745', ...necessityData.map((item) => item.color)];
 
-      const labels = categories.map(cat => cat.label);
-      const data = categories.map(cat => cat.value);
-
-      // Render the chart
       const ctx = document.getElementById('financialChart').getContext('2d');
       new Chart(ctx, {
         type: 'pie',
@@ -153,7 +183,7 @@
           labels: labels,
           datasets: [{
             data: data,
-            backgroundColor: ['#007BFF', '#FF5733', '#FFC300', '#28A745']
+            backgroundColor: backgroundColors
           }]
         },
         options: {
