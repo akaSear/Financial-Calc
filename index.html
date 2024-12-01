@@ -114,6 +114,7 @@
       const debtEntry = document.createElement('div');
       debtEntry.className = 'dynamic-entry';
 
+      // Debt Amount
       const debtWrapper = document.createElement('div');
       const debtLabel = document.createElement('label');
       debtLabel.textContent = 'Debt Amount ($):';
@@ -124,6 +125,7 @@
       debtWrapper.appendChild(debtLabel);
       debtWrapper.appendChild(debtInput);
 
+      // APR Input
       const aprWrapper = document.createElement('div');
       const aprLabel = document.createElement('label');
       aprLabel.textContent = 'APR (%):';
@@ -134,15 +136,30 @@
       aprWrapper.appendChild(aprLabel);
       aprWrapper.appendChild(aprInput);
 
+      // Minimum Payment Input
+      const minPaymentWrapper = document.createElement('div');
+      const minPaymentLabel = document.createElement('label');
+      minPaymentLabel.textContent = 'Minimum Payment ($):';
+      const minPaymentInput = document.createElement('input');
+      minPaymentInput.type = 'number';
+      minPaymentInput.placeholder = 'Enter minimum payment';
+      minPaymentInput.className = 'debt-min-payment';
+      minPaymentWrapper.appendChild(minPaymentLabel);
+      minPaymentWrapper.appendChild(minPaymentInput);
+
+      // Remove Button
       const removeButton = document.createElement('button');
       removeButton.textContent = 'Remove';
       removeButton.type = 'button';
       removeButton.onclick = () => debtEntry.remove();
 
+      // Append everything to the debt entry
       debtEntry.appendChild(debtWrapper);
       debtEntry.appendChild(aprWrapper);
+      debtEntry.appendChild(minPaymentWrapper);
       debtEntry.appendChild(removeButton);
 
+      // Append the debt entry to the debt container
       debtContainer.appendChild(debtEntry);
     }
 
