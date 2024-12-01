@@ -40,6 +40,14 @@
     .form-container button:hover {
       background: #0056b3;
     }
+    .debt-entry {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .debt-entry input {
+      flex: 1;
+    }
     canvas {
       max-width: 100%;
     }
@@ -55,17 +63,14 @@
     <label for="bills">Monthly Bills ($)</label>
     <input type="number" id="bills" placeholder="Enter your bills">
 
-    <label for="debt">Total Debt ($)</label>
-    <input type="number" id="debt" placeholder="Enter your debt">
-
-    <label for="payments">Minimum Monthly Payments ($)</label>
-    <input type="number" id="payments" placeholder="Enter minimum payments">
-
-    <label for="apr">Debt APR (%)</label>
-    <input type="number" id="apr" placeholder="Enter APR">
-
     <label for="necessities">Other Necessities ($)</label>
     <input type="number" id="necessities" placeholder="Enter other necessities">
+
+    <h2>Debts</h2>
+    <div id="debt-container">
+      <!-- Debt entries will be added here -->
+    </div>
+    <button type="button" onclick="addDebtEntry()">Add Debt</button>
 
     <button onclick="generateChart()">Generate Graph</button>
   </div>
@@ -75,31 +80,72 @@
   </div>
 
   <script>
+    function addDebtEntry() {
+      const debtContainer = document.getElementById('debt-container');
+      
+      // Create a new debt entry
+      const debtEntry = document.createElement('div');
+      debtEntry.className = 'debt-entry';
+
+      // Input for debt amount
+      const debtInput = document.createElement('input');
+      debtInput.type = 'number';
+      debtInput.placeholder = 'Debt Amount ($)';
+      debtInput.className = 'debt-amount';
+
+      // Input for debt APR
+      const aprInput = document.createElement('input');
+      aprInput.type = 'number';
+      aprInput.placeholder = 'APR (%)';
+      aprInput.className = 'debt-apr';
+
+      // Remove button
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Remove';
+      removeButton.type = 'button';
+      removeButton.onclick = () => debtEntry.remove();
+
+      // Add inputs and button to the entry
+      debtEntry.appendChild(debtInput);
+      debtEntry.appendChild(aprInput);
+      debtEntry.appendChild(removeButton);
+
+      // Add entry to the container
+      debtContainer.appendChild(debtEntry);
+    }
+
     function generateChart() {
-      // Get input values
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
-      const debt = parseFloat(document.getElementById('debt').value) || 0;
-      const payments = parseFloat(document.getElementById('payments').value) || 0;
-      const apr = parseFloat(document.getElementById('apr').value) || 0;
       const necessities = parseFloat(document.getElementById('necessities').value) || 0;
 
-      // Calculate percentages
-      const totalExpenses = bills + payments + necessities;
+      // Collect debt data
+      const debtEntries = document.querySelectorAll('.debt-entry');
+      let totalDebtPayments = 0;
+
+      debtEntries.forEach(entry => {
+        const debtAmount = parseFloat(entry.querySelector('.debt-amount').value) || 0;
+        const apr = parseFloat(entry.querySelector('.debt-apr').value) || 0;
+        const monthlyInterest = (debtAmount * (apr / 100)) / 12;
+        totalDebtPayments += monthlyInterest;
+      });
+
+      // Calculate remaining income
+      const totalExpenses = bills + necessities + totalDebtPayments;
       const remainingIncome = income - totalExpenses;
-      const debtInterest = (debt * (apr / 100)) / 12; // Monthly interest
+
+      // Prepare chart data
       const categories = [
         { label: 'Bills', value: bills },
-        { label: 'Debt Payments', value: payments + debtInterest },
         { label: 'Necessities', value: necessities },
-        { label: 'Remaining Income', value: remainingIncome },
+        { label: 'Debt Payments', value: totalDebtPayments },
+        { label: 'Remaining Income', value: remainingIncome }
       ];
 
-      // Prepare data for the chart
       const labels = categories.map(cat => cat.label);
       const data = categories.map(cat => cat.value);
 
-      // Generate chart
+      // Render the chart
       const ctx = document.getElementById('financialChart').getContext('2d');
       new Chart(ctx, {
         type: 'pie',
