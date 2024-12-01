@@ -76,6 +76,21 @@
     canvas {
       max-width: 100%;
     }
+
+    .summary {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .summary h3 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    .summary p {
+      font-size: 1.1em;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
@@ -104,6 +119,10 @@
 
   <div class="chart-container">
     <canvas id="financialChart"></canvas>
+  </div>
+
+  <div class="summary" id="summary">
+    <!-- Summary content will be inserted here -->
   </div>
 
   <script>
@@ -202,7 +221,42 @@
       necessitiesContainer.appendChild(necessityEntry);
     }
 
-    // Generate the chart
+    // Calculate the time and interest for debts
+    function calculateDebtDetails() {
+      const debts = [...document.querySelectorAll('.debt-amount')].map((input, idx) => {
+        const amount = parseFloat(input.value) || 0;
+        const apr = parseFloat(document.querySelectorAll('.debt-apr')[idx].value) || 0;
+        const minPayment = parseFloat(document.querySelectorAll('.debt-min-payment')[idx].value) || 0;
+        return { amount, apr, minPayment };
+      });
+
+      let totalInterest = 0;
+      let totalDebt = 0;
+      let totalPayments = 0;
+      let totalMonths = 0;
+
+      debts.forEach(debt => {
+        totalDebt += debt.amount;
+        totalPayments += debt.minPayment;
+        let remainingDebt = debt.amount;
+        let months = 0;
+
+        // Estimate interest and time to pay off if only minimum payments are made
+        while (remainingDebt > 0) {
+          let interest = remainingDebt * (debt.apr / 100 / 12); // Monthly interest
+          totalInterest += interest;
+          remainingDebt += interest - debt.minPayment;
+          if (remainingDebt > 0) {
+            months++;
+          }
+        }
+        totalMonths = Math.max(totalMonths, months);
+      });
+
+      return { totalDebt, totalPayments, totalInterest, totalMonths };
+    }
+
+    // Generate the chart and display details
     function generateChart() {
       const income = parseFloat(document.getElementById('income').value) || 0;
       const bills = parseFloat(document.getElementById('bills').value) || 0;
@@ -213,19 +267,30 @@
       const debtTotal = debts.reduce((sum, val) => sum + val, 0);
       const necessityTotal = necessities.reduce((sum, val) => sum + val, 0);
 
+      const totalDebtDetails = calculateDebtDetails();
       const other = income - (bills + debtTotal + necessityTotal);
 
+      // Pie chart data
       const ctx = document.getElementById('financialChart').getContext('2d');
       new Chart(ctx, {
         type: 'pie',
         data: {
           labels: ['Bills', 'Debts', 'Necessities', 'Other'],
           datasets: [{
-            data: [bills, debtTotal, necessityTotal, other > 0 ? other : 0],
+            data: [bills, totalDebtDetails.totalPayments, necessityTotal, other > 0 ? other : 0],
             backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
           }]
         }
       });
+
+      // Display debt summary details
+      const summaryElement = document.getElementById('summary');
+      summaryElement.innerHTML = `
+        <h3>Total Debt: $${totalDebtDetails.totalDebt.toFixed(2)}</h3>
+        <p>Total Monthly Payments: $${totalDebtDetails.totalPayments.toFixed(2)}</p>
+        <p>Total Interest (if only minimum payments are made): $${totalDebtDetails.totalInterest.toFixed(2)}</p>
+        <p>Estimated Time to Pay Off: ${totalDebtDetails.totalMonths} months</p>
+      `;
     }
   </script>
 </body>
